@@ -1,0 +1,55 @@
+template<class T>
+class SingletonBin
+{
+public:
+	SingletonBin(T* instance) : _instance(instance) {}
+	~SingletonBin() {
+		if(_instance) {
+			delete _instance;
+			_instance = nullptr;
+		}
+	}
+private:
+	T* _instance;
+};
+
+ /**
+ * \par Example
+ *\code
+ *   class SingletonExample : public MySingleton<SingletonExample>{
+ *		friend class MySingleton<SingletonExample>; // MySingleton中new SingletonExample，需要friend
+ *		SingletonExample() {}
+ *		SingletonExample(const SingletonExample&) = delete;
+ *		SingletonExample& operator= (const SingletonExample&) = delete;
+ *	}
+ *	SingletonExample::instance();
+ *\endcode
+ */
+template<class T>
+class MySingleton
+{
+public:
+	static T* instance()
+	{
+		std::call_once(of, [&]() {
+			_inst = new T;
+			static SingletonBin<T> d(_inst);
+		});
+		return _inst;//.get();
+	}
+
+	MySingleton(const MySingleton&) = delete;
+	MySingleton& operator= (const MySingleton&) = delete;
+protected:
+	MySingleton() {}
+
+private:
+	std::mutex _mutex;
+	static T* _inst;
+	static std::once_flag of;
+};
+
+template<class T>
+T* MySingleton<T>::_inst = nullptr;
+template<class T>
+std::once_flag MySingleton<T>::of;
